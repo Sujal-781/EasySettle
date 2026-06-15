@@ -39,6 +39,10 @@ public class ExpenseService {
 
         List<User> members = group.getMembers();
 
+        if (members.isEmpty()) {
+            throw new RuntimeException("Group has no members");
+        }
+
         // step 3: divide amount equally — BigDecimal division
         BigDecimal splitAmount = expense.getAmount()
                 .divide(BigDecimal.valueOf(members.size()), 2, RoundingMode.HALF_UP);
