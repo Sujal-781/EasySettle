@@ -22,10 +22,10 @@ public class GroupController {
         return ResponseEntity.status(HttpStatus.CREATED).body(savedGroup);
     }
 
-    @PostMapping("{groupId}/members/{userId}")
-    public ResponseEntity<User> addMember(@PathVariable Long groupId, Long userId){
+    @PostMapping("/{groupId}/members/{userId}")
+    public ResponseEntity<Void> addMember(@PathVariable Long groupId, @PathVariable Long userId){
         groupService.addMember(groupId, userId);
-        return ResponseEntity.status(HttpStatus.CREATED).body(groupService.getGroupById(groupId));
+        return ResponseEntity.ok().build();
     }
 
     @GetMapping("/{id}")
