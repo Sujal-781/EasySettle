@@ -19,7 +19,7 @@ public class ExpenseController {
         this.expenseService = expenseService;
     }
 
-    @PostMapping
+    @PostMapping("/add")
     public ResponseEntity<Expense> addExpense(@RequestBody Expense expense){
         Expense addedExpense = expenseService.addExpense(expense);
         return ResponseEntity.status(HttpStatus.CREATED).body(addedExpense);
