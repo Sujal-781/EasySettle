@@ -1,12 +1,10 @@
 package com.sujal.easySettle.controller;
 import com.sujal.easySettle.entity.Group;
+import com.sujal.easySettle.entity.User;
 import com.sujal.easySettle.service.GroupService;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
-import org.springframework.web.bind.annotation.PostMapping;
-import org.springframework.web.bind.annotation.RequestBody;
-import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.bind.annotation.*;
 
 @RestController
 @RequestMapping("/groups")
@@ -22,5 +20,11 @@ public class GroupController {
     public ResponseEntity<Group> create(@RequestBody Group group){
         Group savedGroup = groupService.createGroup(group);
         return ResponseEntity.status(HttpStatus.CREATED).body(savedGroup);
+    }
+
+    @PostMapping("{groupId}/members/{userId}")
+    public ResponseEntity<User> addMember(@PathVariable Long groupId, Long userId){
+        groupService.addMember(groupId, userId);
+        return ResponseEntity.status(HttpStatus.CREATED).body(groupService.getGroupById(groupId));
     }
 }
