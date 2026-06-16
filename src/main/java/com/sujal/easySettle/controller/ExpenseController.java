@@ -5,6 +5,7 @@ import com.sujal.easySettle.service.ExpenseService;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
@@ -19,7 +20,7 @@ public class ExpenseController {
     }
 
     @PostMapping
-    public ResponseEntity<Expense> addExpense(Expense expense){
+    public ResponseEntity<Expense> addExpense(@RequestBody Expense expense){
         Expense addedExpense = expenseService.addExpense(expense);
         return ResponseEntity.status(HttpStatus.CREATED).body(addedExpense);
     }
