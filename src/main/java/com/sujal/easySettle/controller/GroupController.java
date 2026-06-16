@@ -27,4 +27,10 @@ public class GroupController {
         groupService.addMember(groupId, userId);
         return ResponseEntity.status(HttpStatus.CREATED).body(groupService.getGroupById(groupId));
     }
+
+    @GetMapping("/{id}")
+    public ResponseEntity<Group> getGroupById(@PathVariable Long id){
+        Group group = groupService.getGroupById(id);
+        return ResponseEntity.ok(group);
+    }
 }
