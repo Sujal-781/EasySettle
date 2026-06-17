@@ -12,7 +12,9 @@ import org.springframework.stereotype.Service;
 
 import java.math.BigDecimal;
 import java.math.RoundingMode;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 
 @Service
 public class ExpenseService {
@@ -59,5 +61,34 @@ public class ExpenseService {
         }
 
         return savedExpense;
+    }
+
+    public Map<Long, BigDecimal> getGroupBalances(Long groupId) {
+        // step 1: get all expenses in the group
+        List<Expense> expenses = expenseRepository.findByGroupId(groupId);
+
+        // step 2: map to track each user's net balance
+        Map<Long, BigDecimal> balances = new HashMap<>();
+
+        // step 3: loop through each expense
+        for (Expense expense : expenses) {
+            List<ExpenseSplit> splits = expenseSplitRepository.findByExpenseId(expense.getId());
+
+            for (ExpenseSplit split : splits) {
+                if (split.isSettled()) continue; // skip settled splits
+
+                Long paidByUserId = expense.getPaidBy().getId();
+                Long owedByUserId = split.getUser().getId();
+                BigDecimal amount = split.getAmountOwed();
+
+                // credit the person who paid
+                balances.merge(paidByUserId, amount, BigDecimal::add);
+
+                // debit the person who owes
+                balances.merge(owedByUserId, amount.negate(), BigDecimal::add);
+            }
+        }
+
+        return balances;
     }
 }

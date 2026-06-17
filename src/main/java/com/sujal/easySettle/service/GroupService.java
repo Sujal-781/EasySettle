@@ -4,6 +4,7 @@ import com.sujal.easySettle.entity.Group;
 import com.sujal.easySettle.entity.User;
 import com.sujal.easySettle.repository.GroupRepository;
 import com.sujal.easySettle.repository.UserRepository;
+import jakarta.transaction.Transactional;
 import org.springframework.stereotype.Service;
 
 @Service
@@ -21,6 +22,7 @@ public class GroupService {
         return groupRepository.save(group);
     }
 
+    @Transactional
     public void addMember(Long groupId, Long userId){
         Group group = groupRepository.findById(groupId)
                 .orElseThrow(() -> new RuntimeException("Group not found with id: " + groupId));
