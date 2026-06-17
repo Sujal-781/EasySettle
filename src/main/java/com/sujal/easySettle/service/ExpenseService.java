@@ -7,8 +7,8 @@ import com.sujal.easySettle.entity.User;
 import com.sujal.easySettle.repository.ExpenseRepository;
 import com.sujal.easySettle.repository.ExpenseSplitRepository;
 import com.sujal.easySettle.repository.GroupRepository;
-import jakarta.transaction.Transactional;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
 import java.math.BigDecimal;
 import java.math.RoundingMode;
