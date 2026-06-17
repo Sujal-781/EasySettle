@@ -29,4 +29,10 @@ public class ExpenseController {
     public ResponseEntity<Map<Long, BigDecimal>> getGroupBalances(@PathVariable Long groupId){
         return ResponseEntity.ok(expenseService.getGroupBalances(groupId));
     }
+
+    @PostMapping("/{expenseId}/settle/{userId}")
+    public ResponseEntity<Void> settleUp(@PathVariable Long expenseId, @PathVariable Long userId){
+        expenseService.settleUp(expenseId, userId);
+        return ResponseEntity.ok().build();
+    }
 }
