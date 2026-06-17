@@ -15,6 +15,7 @@ import java.math.RoundingMode;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Optional;
 
 @Service
 public class ExpenseService {
@@ -94,6 +95,13 @@ public class ExpenseService {
 
     @Transactional
     public void settleUp(Long expenseId, Long userId){
-        ExpenseSplit split = expenseSplitRepository.
+        ExpenseSplit split = expenseSplitRepository.findByExpenseIdAndUserId(expenseId, userId)
+                        .orElseThrow(() -> new RuntimeException("Split not found for expenseId: "
+                                + expenseId + " and userId: " + userId));
+
+        split.setSettled(true);
+
+        expenseSplitRepository.save(split);
+
     }
 }
