@@ -91,4 +91,9 @@ public class ExpenseService {
 
         return balances;
     }
+
+    @Transactional
+    public void settleUp(Long expenseId, Long userId){
+        ExpenseSplit split = expenseSplitRepository.
+    }
 }
