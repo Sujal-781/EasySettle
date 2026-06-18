@@ -1,12 +1,14 @@
 package com.sujal.easySettle.controller;
 
 import com.sujal.easySettle.entity.Expense;
+import com.sujal.easySettle.service.DebtSimplificationService;
 import com.sujal.easySettle.service.ExpenseService;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
 import java.math.BigDecimal;
+import java.util.List;
 import java.util.Map;
 
 @RestController
@@ -14,9 +16,11 @@ import java.util.Map;
 public class ExpenseController {
 
     private final ExpenseService expenseService;
+    private final DebtSimplificationService debtSimplificationService;
 
-    public ExpenseController(ExpenseService expenseService) {
+    public ExpenseController(ExpenseService expenseService, DebtSimplificationService debtSimplificationService) {
         this.expenseService = expenseService;
+        this.debtSimplificationService = debtSimplificationService;
     }
 
     @PostMapping("/add")
@@ -34,5 +38,10 @@ public class ExpenseController {
     public ResponseEntity<Void> settleUp(@PathVariable Long expenseId, @PathVariable Long userId){
         expenseService.settleUp(expenseId, userId);
         return ResponseEntity.ok().build();
+    }
+
+    @GetMapping("/groups/{groupId}/simplify")
+    public ResponseEntity<List<String>> simplifyDebts(@PathVariable Long groupId) {
+        return ResponseEntity.ok(debtSimplificationService.simplifyDebts(groupId));
     }
 }
