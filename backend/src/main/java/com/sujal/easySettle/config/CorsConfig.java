@@ -1,5 +1,3 @@
-// backend/src/main/java/com/sujal/easySettle/config/CorsConfig.java
-
 package com.sujal.easySettle.config;
 
 import org.springframework.context.annotation.Configuration;
