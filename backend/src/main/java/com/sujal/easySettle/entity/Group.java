@@ -1,6 +1,7 @@
 package com.sujal.easySettle.entity;
 
 import com.fasterxml.jackson.annotation.JsonIgnore;
+import com.fasterxml.jackson.annotation.JsonProperty;
 import jakarta.persistence.*;
 import lombok.*;
 import org.hibernate.annotations.CreationTimestamp;
@@ -25,7 +26,7 @@ public class Group {
     @Column(nullable = false)
     private String name;
 
-    @JsonIgnore
+    @JsonProperty
     @ManyToOne
     @JoinColumn(name = "created_by", nullable = false)
     private User createdBy;           // who created the group

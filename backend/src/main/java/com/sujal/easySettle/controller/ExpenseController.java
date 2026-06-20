@@ -44,4 +44,9 @@ public class ExpenseController {
     public ResponseEntity<List<String>> simplifyDebts(@PathVariable Long groupId) {
         return ResponseEntity.ok(debtSimplificationService.simplifyDebts(groupId));
     }
+
+    @GetMapping("/groups/{groupId}/list")
+    public ResponseEntity<List<Expense>> getGroupExpenses(@PathVariable Long groupId) {
+        return ResponseEntity.ok(expenseService.getGroupExpenses(groupId));
+    }
 }

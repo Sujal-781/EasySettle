@@ -104,4 +104,9 @@ public class ExpenseService {
         expenseSplitRepository.save(split);
 
     }
+
+
+    public List<Expense> getGroupExpenses(Long groupId) {
+        return expenseRepository.findByGroupId(groupId);
+    }
 }
