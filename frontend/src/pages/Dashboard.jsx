@@ -27,10 +27,12 @@ export default function Dashboard() {
     const createGroup = async () => {
         if (!newGroupName.trim()) return;
         try {
-            await api.post('/groups', {
+            const response = await api.post('/groups', {
                 name: newGroupName,
                 createdBy: { id: userId }
             });
+            // also add creator as member
+            await api.post(`/groups/${response.data.id}/members/${userId}`);
             setNewGroupName('');
             setShowModal(false);
             fetchGroups();
@@ -48,17 +50,27 @@ export default function Dashboard() {
         }}>
             {/* Navbar */}
             <div style={{
-                display: 'flex', justifyContent: 'space-between', alignItems: 'center',
-                padding: '20px 40px', borderBottom: '1px solid rgba(255,255,255,0.1)'
+                display: 'flex',
+                justifyContent: 'space-between',
+                alignItems: 'center',
+                padding: '20px 40px',
+                borderBottom: '1px solid rgba(255,255,255,0.1)'
             }}>
-                <h2 style={{ color: '#22c55e', margin: 0 }}>💸 EasySettle</h2>
-                <div style={{ display: 'flex', alignItems: 'center', gap: '20px' }}>
+                <h2 style={{ color: '#22c55e', margin: 0 }}> EasySettle</h2>
+                <div style={{ display: 'flex', alignItems: 'center', gap: '16px', whiteSpace: 'nowrap' }}>
                     <span style={{ color: '#94a3b8' }}>Hey, {userName} 👋</span>
-                    <button onClick={() => { localStorage.clear(); navigate('/'); }}
+                    <button
+                        onClick={() => { localStorage.clear(); navigate('/'); }}
                         style={{
-                            background: 'transparent', border: '1px solid #ef4444',
-                            color: '#ef4444', padding: '8px 16px', borderRadius: '8px',
-                            cursor: 'pointer', fontFamily: 'inherit'
+                            background: 'transparent',
+                            border: '1px solid #ef4444',
+                            color: '#ef4444',
+                            padding: '8px 16px',
+                            borderRadius: '8px',
+                            cursor: 'pointer',
+                            fontFamily: 'inherit',
+                            whiteSpace: 'nowrap',
+                            fontSize: '14px'
                         }}>
                         Logout
                     </button>
@@ -67,13 +79,26 @@ export default function Dashboard() {
 
             {/* Main Content */}
             <div style={{ maxWidth: '900px', margin: '40px auto', padding: '0 20px' }}>
-                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '30px' }}>
+                <div style={{
+                    display: 'flex',
+                    justifyContent: 'space-between',
+                    alignItems: 'center',
+                    marginBottom: '30px'
+                }}>
                     <h3 style={{ margin: 0, fontSize: '22px' }}>Your Groups</h3>
-                    <button onClick={() => setShowModal(true)}
+                    <button
+                        onClick={() => setShowModal(true)}
                         style={{
-                            background: '#22c55e', color: 'white', border: 'none',
-                            padding: '10px 20px', borderRadius: '8px', cursor: 'pointer',
-                            fontFamily: 'inherit', fontWeight: 600, fontSize: '15px'
+                            background: '#22c55e',
+                            color: 'white',
+                            border: 'none',
+                            padding: '10px 20px',
+                            borderRadius: '8px',
+                            cursor: 'pointer',
+                            fontFamily: 'inherit',
+                            fontWeight: 600,
+                            fontSize: '15px',
+                            width: 'auto'
                         }}>
                         + New Group
                     </button>
@@ -85,18 +110,31 @@ export default function Dashboard() {
                         <p style={{ fontSize: '18px' }}>No groups yet. Create one to get started!</p>
                     </div>
                 ) : (
-                    <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(250px, 1fr))', gap: '20px' }}>
+                    <div style={{
+                        display: 'grid',
+                        gridTemplateColumns: 'repeat(auto-fill, minmax(250px, 1fr))',
+                        gap: '20px'
+                    }}>
                         {groups.map(group => (
-                            <div key={group.id}
+                            <div
+                                key={group.id}
                                 onClick={() => navigate(`/groups/${group.id}`)}
                                 style={{
                                     background: 'rgba(255,255,255,0.05)',
                                     border: '1px solid rgba(255,255,255,0.1)',
-                                    borderRadius: '16px', padding: '24px',
-                                    cursor: 'pointer', transition: 'transform 0.2s',
+                                    borderRadius: '16px',
+                                    padding: '24px',
+                                    cursor: 'pointer',
+                                    transition: 'transform 0.2s, border-color 0.2s',
                                 }}
-                                onMouseOver={e => e.currentTarget.style.transform = 'translateY(-4px)'}
-                                onMouseOut={e => e.currentTarget.style.transform = 'translateY(0)'}
+                                onMouseOver={e => {
+                                    e.currentTarget.style.transform = 'translateY(-4px)';
+                                    e.currentTarget.style.borderColor = '#22c55e';
+                                }}
+                                onMouseOut={e => {
+                                    e.currentTarget.style.transform = 'translateY(0)';
+                                    e.currentTarget.style.borderColor = 'rgba(255,255,255,0.1)';
+                                }}
                             >
                                 <div style={{ fontSize: '32px', marginBottom: '12px' }}>👥</div>
                                 <h4 style={{ margin: '0 0 8px 0', fontSize: '18px' }}>{group.name}</h4>
@@ -112,12 +150,20 @@ export default function Dashboard() {
             {/* Create Group Modal */}
             {showModal && (
                 <div style={{
-                    position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.6)',
-                    display: 'flex', alignItems: 'center', justifyContent: 'center', zIndex: 100
+                    position: 'fixed',
+                    inset: 0,
+                    background: 'rgba(0,0,0,0.6)',
+                    display: 'flex',
+                    alignItems: 'center',
+                    justifyContent: 'center',
+                    zIndex: 100
                 }}>
                     <div style={{
-                        background: '#1e293b', borderRadius: '16px', padding: '32px',
-                        width: '400px', border: '1px solid rgba(255,255,255,0.1)'
+                        background: '#1e293b',
+                        borderRadius: '16px',
+                        padding: '32px',
+                        width: '400px',
+                        border: '1px solid rgba(255,255,255,0.1)'
                     }}>
                         <h3 style={{ margin: '0 0 20px 0' }}>Create New Group</h3>
                         <input
@@ -125,27 +171,49 @@ export default function Dashboard() {
                             placeholder="Group name (e.g. Goa Trip)"
                             value={newGroupName}
                             onChange={e => setNewGroupName(e.target.value)}
+                            onKeyDown={e => e.key === 'Enter' && createGroup()}
                             style={{
-                                width: '100%', padding: '12px 16px', borderRadius: '8px',
-                                border: '1px solid rgba(255,255,255,0.2)', background: '#0f172a',
-                                color: 'white', fontSize: '15px', boxSizing: 'border-box',
-                                fontFamily: 'inherit', outline: 'none'
+                                width: '100%',
+                                padding: '12px 16px',
+                                borderRadius: '8px',
+                                border: '1px solid rgba(255,255,255,0.2)',
+                                background: '#0f172a',
+                                color: 'white',
+                                fontSize: '15px',
+                                boxSizing: 'border-box',
+                                fontFamily: 'inherit',
+                                outline: 'none'
                             }}
                         />
                         <div style={{ display: 'flex', gap: '12px', marginTop: '20px' }}>
-                            <button onClick={() => setShowModal(false)}
+                            <button
+                                onClick={() => setShowModal(false)}
                                 style={{
-                                    flex: 1, padding: '12px', borderRadius: '8px',
-                                    border: '1px solid rgba(255,255,255,0.2)', background: 'transparent',
-                                    color: 'white', cursor: 'pointer', fontFamily: 'inherit'
+                                    flex: 1,
+                                    padding: '12px',
+                                    borderRadius: '8px',
+                                    border: '1px solid rgba(255,255,255,0.2)',
+                                    background: 'transparent',
+                                    color: 'white',
+                                    cursor: 'pointer',
+                                    fontFamily: 'inherit',
+                                    fontSize: '15px'
                                 }}>
                                 Cancel
                             </button>
-                            <button onClick={createGroup}
+                            <button
+                                onClick={createGroup}
                                 style={{
-                                    flex: 1, padding: '12px', borderRadius: '8px',
-                                    border: 'none', background: '#22c55e',
-                                    color: 'white', cursor: 'pointer', fontFamily: 'inherit', fontWeight: 600
+                                    flex: 1,
+                                    padding: '12px',
+                                    borderRadius: '8px',
+                                    border: 'none',
+                                    background: '#22c55e',
+                                    color: 'white',
+                                    cursor: 'pointer',
+                                    fontFamily: 'inherit',
+                                    fontWeight: 600,
+                                    fontSize: '15px'
                                 }}>
                                 Create
                             </button>
