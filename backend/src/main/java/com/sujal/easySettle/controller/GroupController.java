@@ -6,6 +6,8 @@ import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
+import java.util.List;
+
 @RestController
 @RequestMapping("/groups")
 public class GroupController {
@@ -32,5 +34,10 @@ public class GroupController {
     public ResponseEntity<Group> getGroupById(@PathVariable Long id){
         Group group = groupService.getGroupById(id);
         return ResponseEntity.ok(group);
+    }
+
+    @GetMapping("/user/{userId}")
+    public ResponseEntity<List<Group>> getGroupsByUser(@PathVariable Long userId){
+        return ResponseEntity.ok(groupService.getGroupsByUserId(userId));
     }
 }

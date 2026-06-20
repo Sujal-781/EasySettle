@@ -7,6 +7,8 @@ import com.sujal.easySettle.repository.UserRepository;
 import jakarta.transaction.Transactional;
 import org.springframework.stereotype.Service;
 
+import java.util.List;
+
 @Service
 public class GroupService {
 
@@ -36,5 +38,9 @@ public class GroupService {
     public Group getGroupById(Long id){
         return groupRepository.findById(id)
                 .orElseThrow(() -> new RuntimeException("Group not found with id: " + id));
+    }
+
+    public List<Group> getGroupsByUserId(Long userId) {
+        return groupRepository.findByMembersId(userId);
     }
 }
