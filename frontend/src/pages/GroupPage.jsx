@@ -16,6 +16,8 @@ export default function GroupPage() {
     const [showDebts, setShowDebts] = useState(false);
     const [expenseDesc, setExpenseDesc] = useState('');
     const [expenseAmount, setExpenseAmount] = useState('');
+    const [showMemberModal, setShowMemberModal] = useState(false);
+    const [allUsers, setAllUsers] = useState([]);
 
     useEffect(() => {
         if (!userId) { navigate('/'); return; }
@@ -48,6 +50,15 @@ export default function GroupPage() {
             setBalances(res.data);
         } catch (err) {
             console.error('Failed to fetch balances', err);
+        }
+    };
+
+    const fetchAllUsers = async () => {
+        try {
+            const res = await api.get('/users');
+            setAllUsers(res.data);
+        } catch (err) {
+            console.error('Failed to fetch users', err);
         }
     };
 
@@ -141,7 +152,10 @@ export default function GroupPage() {
                         </button>
                         <h2 style={{ margin: 0, fontSize: '28px' }}>👥 {group?.name || 'Loading...'}</h2>
                     </div>
-                    <div style={{ display: 'flex', gap: '12px' }}>
+                    <div style={{ display: 'flex', gap: '12px', flexWrap: 'wrap', justifyContent: 'flex-end' }}>
+                        <button onClick={() => { fetchAllUsers(); setShowMemberModal(true); }} style={btnStyle('#8b5cf6')}>
+                            + Add Member
+                        </button>
                         <button onClick={() => setShowExpenseModal(true)} style={btnStyle()}>
                             + Add Expense
                         </button>
@@ -222,6 +236,64 @@ export default function GroupPage() {
                     )}
                 </div>
             </div>
+
+            {/* Add Member Modal */}
+            {showMemberModal && (
+                <div style={{
+                    position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.6)',
+                    display: 'flex', alignItems: 'center', justifyContent: 'center', zIndex: 100
+                }}>
+                    <div style={{
+                        background: '#1e293b', borderRadius: '16px', padding: '32px',
+                        width: '400px', border: '1px solid rgba(255,255,255,0.1)',
+                        maxHeight: '80vh', overflowY: 'auto'
+                    }}>
+                        <h3 style={{ margin: '0 0 20px 0' }}>Add Member</h3>
+                        {allUsers.length === 0 ? (
+                            <p style={{ color: '#64748b' }}>No users found.</p>
+                        ) : (
+                            allUsers.map(user => (
+                                <div key={user.id} style={{
+                                    display: 'flex', justifyContent: 'space-between',
+                                    alignItems: 'center', padding: '12px 0',
+                                    borderBottom: '1px solid rgba(255,255,255,0.05)'
+                                }}>
+                                    <div>
+                                        <p style={{ margin: 0, fontWeight: 500 }}>{user.name}</p>
+                                        <p style={{ margin: '2px 0 0 0', color: '#64748b', fontSize: '12px' }}>{user.email}</p>
+                                    </div>
+                                    <button
+                                        onClick={async () => {
+                                            try {
+                                                await api.post(`/groups/${id}/members/${user.id}`);
+                                                setShowMemberModal(false);
+                                                fetchGroup();
+                                            } catch (err) {
+                                                console.error('Failed to add member', err);
+                                            }
+                                        }}
+                                        style={{
+                                            background: '#22c55e', color: 'white', border: 'none',
+                                            padding: '6px 14px', borderRadius: '6px', cursor: 'pointer',
+                                            fontFamily: 'inherit', fontSize: '13px', width: 'auto'
+                                        }}>
+                                        Add
+                                    </button>
+                                </div>
+                            ))
+                        )}
+                        <button onClick={() => setShowMemberModal(false)}
+                            style={{
+                                width: '100%', marginTop: '20px', padding: '12px',
+                                borderRadius: '8px', border: '1px solid rgba(255,255,255,0.2)',
+                                background: 'transparent', color: 'white', cursor: 'pointer',
+                                fontFamily: 'inherit', fontSize: '15px'
+                            }}>
+                            Close
+                        </button>
+                    </div>
+                </div>
+            )}
 
             {/* Add Expense Modal */}
             {showExpenseModal && (
