@@ -4,6 +4,7 @@ import com.sujal.easySettle.entity.User;
 import com.sujal.easySettle.repository.UserRepository;
 import org.springframework.stereotype.Service;
 
+import java.util.List;
 import java.util.Optional;
 
 @Service
@@ -26,5 +27,9 @@ public class UserService {
     public User findById(Long id){
         return userRepository.findById(id)
                 .orElseThrow(() -> new RuntimeException("User Not found with id: " + id));
+    }
+
+    public List<User> getAllUsers() {
+        return userRepository.findAll();
     }
 }
