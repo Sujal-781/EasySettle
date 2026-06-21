@@ -40,4 +40,10 @@ public class GroupController {
     public ResponseEntity<List<Group>> getGroupsByUser(@PathVariable Long userId){
         return ResponseEntity.ok(groupService.getGroupsByUserId(userId));
     }
+
+    @GetMapping("/{id}/members")
+    public ResponseEntity<List<User>> getGroupMembers(@PathVariable Long id) {
+        Group group = groupService.getGroupById(id);
+        return ResponseEntity.ok(group.getMembers());
+    }
 }

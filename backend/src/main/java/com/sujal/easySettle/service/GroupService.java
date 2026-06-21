@@ -25,17 +25,23 @@ public class GroupService {
     }
 
     @Transactional
-    public void addMember(Long groupId, Long userId){
+    public void addMember(Long groupId, Long userId) {
         Group group = groupRepository.findById(groupId)
                 .orElseThrow(() -> new RuntimeException("Group not found with id: " + groupId));
         User user = userRepository.findById(userId)
                 .orElseThrow(() -> new RuntimeException("User not found with id: " + userId));
 
+        // check if already a member
+        boolean alreadyMember = group.getMembers().stream()
+                .anyMatch(m -> m.getId().equals(userId));
+        if (alreadyMember) return;  // ← skip if already added
+
         group.getMembers().add(user);
         groupRepository.save(group);
     }
 
-    public Group getGroupById(Long id){
+    @Transactional
+    public Group getGroupById(Long id) {
         return groupRepository.findById(id)
                 .orElseThrow(() -> new RuntimeException("Group not found with id: " + id));
     }
