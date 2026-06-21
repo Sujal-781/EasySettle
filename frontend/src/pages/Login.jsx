@@ -22,24 +22,22 @@ export default function Login() {
         setPasswordError(''); return true;
     };
 
-    const handleSubmit = async (e) => {
+    async function handleSubmit(e) {
         e.preventDefault();
-        const emailValid = validateEmail();
-        const passwordValid = validatePassword();
-        if (!emailValid || !passwordValid) return;
+        if (!validateEmail() || !validatePassword()) return;
         try {
-            const response = await api.get(`/users/email?email=${email}`);
-            if (response.data.password === password) {
-                localStorage.setItem('userId', response.data.id);
-                localStorage.setItem('userName', response.data.name);
-                navigate('/dashboard');
-            } else {
-                setPasswordError('Incorrect password');
-            }
+            const response = await api.post('/users/login', { email, password });
+            localStorage.setItem('userId', response.data.id);
+            localStorage.setItem('userName', response.data.name);
+            navigate('/dashboard');
         } catch (err) {
-            setEmailError('No account found with this email');
+            if (err.response?.status === 401) {
+                setPasswordError('Incorrect email or password');
+            } else {
+                setEmailError('Something went wrong. Try again.');
+            }
         }
-    };
+    }
 
     return (
         <div className="container">

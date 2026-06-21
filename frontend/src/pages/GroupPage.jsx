@@ -18,12 +18,16 @@ export default function GroupPage() {
     const [expenseAmount, setExpenseAmount] = useState('');
     const [showMemberModal, setShowMemberModal] = useState(false);
     const [allUsers, setAllUsers] = useState([]);
+    const [users, setUsers] = useState({});
+    const [groupMemberIds, setGroupMemberIds] = useState([]);
 
     useEffect(() => {
         if (!userId) { navigate('/'); return; }
         fetchGroup();
         fetchExpenses();
         fetchBalances();
+        fetchUsers();
+        fetchGroupMembers();
     }, []);
 
     const fetchGroup = async () => {
@@ -44,6 +48,18 @@ export default function GroupPage() {
         }
     };
 
+    const fetchUsers = async () => {
+        try {
+            const res = await api.get('/users');
+            const userMap = {};
+            res.data.forEach(u => userMap[u.id] = u.name);
+            setUsers(userMap);
+            setAllUsers(res.data);
+        } catch (err) {
+            console.error('Failed to fetch users', err);
+        }
+    };
+
     const fetchBalances = async () => {
         try {
             const res = await api.get(`/expenses/groups/${id}/balances`);
@@ -53,12 +69,13 @@ export default function GroupPage() {
         }
     };
 
-    const fetchAllUsers = async () => {
+    const fetchGroupMembers = async () => {
         try {
-            const res = await api.get('/users');
-            setAllUsers(res.data);
+            const res = await api.get(`/groups/${id}/members`);
+            setGroupMemberIds(res.data.map(m => m.id));
         } catch (err) {
-            console.error('Failed to fetch users', err);
+            // if endpoint doesn't exist yet, silently fail
+            console.error('Failed to fetch group members', err);
         }
     };
 
@@ -153,7 +170,7 @@ export default function GroupPage() {
                         <h2 style={{ margin: 0, fontSize: '28px' }}>👥 {group?.name || 'Loading...'}</h2>
                     </div>
                     <div style={{ display: 'flex', gap: '12px', flexWrap: 'wrap', justifyContent: 'flex-end' }}>
-                        <button onClick={() => { fetchAllUsers(); setShowMemberModal(true); }} style={btnStyle('#8b5cf6')}>
+                        <button onClick={() => { fetchUsers(); fetchGroupMembers(); setShowMemberModal(true); }} style={btnStyle('#8b5cf6')}>
                             + Add Member
                         </button>
                         <button onClick={() => setShowExpenseModal(true)} style={btnStyle()}>
@@ -177,7 +194,7 @@ export default function GroupPage() {
                                 alignItems: 'center', padding: '10px 0',
                                 borderBottom: '1px solid rgba(255,255,255,0.05)'
                             }}>
-                                <span style={{ color: '#94a3b8' }}>User {uid}</span>
+                                <span style={{ color: '#94a3b8' }}>{users[uid] || `User ${uid}`}</span>
                                 <span style={{
                                     color: amount > 0 ? '#22c55e' : amount < 0 ? '#ef4444' : '#64748b',
                                     fontWeight: 600
@@ -225,7 +242,7 @@ export default function GroupPage() {
                                 <div>
                                     <p style={{ margin: 0, fontWeight: 500 }}>{expense.description}</p>
                                     <p style={{ margin: '4px 0 0 0', color: '#64748b', fontSize: '13px' }}>
-                                        Paid by User {expense.paidBy?.id}
+                                        Paid by {users[expense.paidBy?.id] || `User ${expense.paidBy?.id}`}
                                     </p>
                                 </div>
                                 <span style={{ color: '#22c55e', fontWeight: 600, fontSize: '18px' }}>
@@ -252,35 +269,40 @@ export default function GroupPage() {
                         {allUsers.length === 0 ? (
                             <p style={{ color: '#64748b' }}>No users found.</p>
                         ) : (
-                            allUsers.map(user => (
-                                <div key={user.id} style={{
-                                    display: 'flex', justifyContent: 'space-between',
-                                    alignItems: 'center', padding: '12px 0',
-                                    borderBottom: '1px solid rgba(255,255,255,0.05)'
-                                }}>
-                                    <div>
-                                        <p style={{ margin: 0, fontWeight: 500 }}>{user.name}</p>
-                                        <p style={{ margin: '2px 0 0 0', color: '#64748b', fontSize: '12px' }}>{user.email}</p>
+                            allUsers.map(user => {
+                                const alreadyMember = groupMemberIds.includes(user.id);
+                                return (
+                                    <div key={user.id} style={{
+                                        display: 'flex', justifyContent: 'space-between',
+                                        alignItems: 'center', padding: '12px 0',
+                                        borderBottom: '1px solid rgba(255,255,255,0.05)'
+                                    }}>
+                                        <div>
+                                            <p style={{ margin: 0, fontWeight: 500 }}>{user.name}</p>
+                                            <p style={{ margin: '2px 0 0 0', color: '#64748b', fontSize: '12px' }}>{user.email}</p>
+                                        </div>
+                                        <button
+                                            onClick={async () => {
+                                                if (alreadyMember) return;
+                                                try {
+                                                    await api.post(`/groups/${id}/members/${user.id}`);
+                                                    setGroupMemberIds(prev => [...prev, user.id]);
+                                                } catch (err) {
+                                                    console.error('Failed to add member', err);
+                                                }
+                                            }}
+                                            style={{
+                                                background: alreadyMember ? '#475569' : '#22c55e',
+                                                color: 'white', border: 'none',
+                                                padding: '6px 14px', borderRadius: '6px',
+                                                cursor: alreadyMember ? 'default' : 'pointer',
+                                                fontFamily: 'inherit', fontSize: '13px', width: 'auto'
+                                            }}>
+                                            {alreadyMember ? 'Added' : 'Add'}
+                                        </button>
                                     </div>
-                                    <button
-                                        onClick={async () => {
-                                            try {
-                                                await api.post(`/groups/${id}/members/${user.id}`);
-                                                setShowMemberModal(false);
-                                                fetchGroup();
-                                            } catch (err) {
-                                                console.error('Failed to add member', err);
-                                            }
-                                        }}
-                                        style={{
-                                            background: '#22c55e', color: 'white', border: 'none',
-                                            padding: '6px 14px', borderRadius: '6px', cursor: 'pointer',
-                                            fontFamily: 'inherit', fontSize: '13px', width: 'auto'
-                                        }}>
-                                        Add
-                                    </button>
-                                </div>
-                            ))
+                                );
+                            })
                         )}
                         <button onClick={() => setShowMemberModal(false)}
                             style={{
