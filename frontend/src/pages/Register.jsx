@@ -10,6 +10,7 @@ export default function Register() {
     const [nameError, setNameError] = useState('');
     const [emailError, setEmailError] = useState('');
     const [passwordError, setPasswordError] = useState('');
+    const [loading, setLoading] = useState(false);
     const navigate = useNavigate();
 
     const validateName = () => {
@@ -35,11 +36,14 @@ export default function Register() {
         const emailValid = validateEmail();
         const passwordValid = validatePassword();
         if (!nameValid || !emailValid || !passwordValid) return;
+        setLoading(true);
         try {
             await api.post('/users/register', { name, email, password });
             navigate('/');
         } catch (err) {
-            setEmailError('Email already in use or registration failed');
+            setEmailError('Registration failed. Please try again.');
+        } finally {
+            setLoading(false);
         }
     };
 
@@ -95,7 +99,9 @@ export default function Register() {
                         />
                         <small className="error">{passwordError}</small>
                     </div>
-                    <button type="submit">Create Account</button>
+                    <button type="submit" disabled={loading}>
+                        {loading ? 'Creating Account...' : 'Create Account'}
+                    </button>
                 </form>
 
                 <div className="bottom-text">

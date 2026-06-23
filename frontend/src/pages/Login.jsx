@@ -22,22 +22,28 @@ export default function Login() {
         setPasswordError(''); return true;
     };
 
-    async function handleSubmit(e) {
+    const handleLoginSubmit = async (e) => {
         e.preventDefault();
         if (!validateEmail() || !validatePassword()) return;
         try {
             const response = await api.post('/users/login', { email, password });
-            localStorage.setItem('userId', response.data.id);
-            localStorage.setItem('userName', response.data.name);
+            const encryptedUserId = btoa(response.data.id); // Simple base64 encoding for demonstration
+            const encryptedUserName = btoa(response.data.name); // Simple base64 encoding for demonstration
+            localStorage.setItem('userId', encryptedUserId);
+            localStorage.setItem('userName', encryptedUserName);
             navigate('/dashboard');
         } catch (err) {
-            if (err.response?.status === 401) {
-                setPasswordError('Incorrect email or password');
-            } else {
-                setEmailError('Something went wrong. Try again.');
-            }
+            handleError(err);
         }
-    }
+    };
+
+    const handleError = (err) => {
+        if (err.response?.status === 401) {
+            setPasswordError('Incorrect email or password');
+        } else {
+            setEmailError('Something went wrong. Try again.');
+        }
+    };
 
     return (
         <div className="container">
@@ -60,7 +66,7 @@ export default function Login() {
                 <h2>Welcome!</h2>
                 <p className="subtitle">Sign in to continue managing your finances.</p>
 
-                <form onSubmit={handleSubmit}>
+                <form onSubmit={handleLoginSubmit}>
                     <div className="form-group">
                         <small>Email</small>
                         <input
@@ -68,6 +74,7 @@ export default function Login() {
                             placeholder="you@example.com"
                             value={email}
                             onChange={e => setEmail(e.target.value)}
+                            aria-label="Email"
                         />
                         <small className="error">{emailError}</small>
                     </div>
@@ -78,6 +85,7 @@ export default function Login() {
                             placeholder="Enter your password"
                             value={password}
                             onChange={e => setPassword(e.target.value)}
+                            aria-label="Password"
                         />
                         <small className="error">{passwordError}</small>
                     </div>
