@@ -1,10 +1,21 @@
 @import url('https://fonts.googleapis.com/css2?family=Poppins:wght@400;500;600;700&display=swap');
 
+:root {
+    --background-gradient: linear-gradient(135deg, #0f172a, #1e293b);
+    --primary-color: #22c55e;
+    --secondary-color: #d1d5db;
+    --error-color: red;
+    --button-hover-color: #16a34a;
+    --input-border-color: #ddd;
+    --text-color: white;
+    --subtitle-color: gray;
+}
+
 html, body {
     margin: 0;
     padding: 0;
     font-family: 'Poppins', sans-serif;
-    background: linear-gradient(135deg, #0f172a, #1e293b);
+    background: var(--background-gradient);
 }
 
 .container {
@@ -19,19 +30,19 @@ html, body {
 }
 
 .text-box {
-    color: white;
+    color: var(--text-color);
     flex: 1;
 }
 
 .text-box h1 {
     font-size: 60px;
-    color: #22c55e;
+    color: var(--primary-color);
 }
 
 .text-box p {
     font-size: 20px;
     margin: 20px 0;
-    color: #d1d5db;
+    color: var(--secondary-color);
 }
 
 .features {
@@ -41,7 +52,7 @@ html, body {
 .feature {
     margin: 18px 0;
     font-size: 18px;
-    color: #d1d5db;
+    color: var(--secondary-color);
 }
 
 .login-box {
@@ -58,7 +69,7 @@ html, body {
 }
 
 .subtitle {
-    color: gray;
+    color: var(--subtitle-color);
     margin-bottom: 30px;
 }
 
@@ -75,7 +86,7 @@ html, body {
 input {
     width: 100%;
     height: 48px;
-    border: 1px solid #ddd;
+    border: 1px solid var(--input-border-color);
     border-radius: 8px;
     padding: 0 15px;
     font-size: 16px;
@@ -83,11 +94,17 @@ input {
     font-family: 'Poppins', sans-serif;
 }
 
+input:focus {
+    outline: none;
+    border-color: var(--primary-color);
+    box-shadow: 0 0 5px var(--primary-color);
+}
+
 button {
     width: 100%;
     height: 50px;
-    background: #22c55e;
-    color: white;
+    background: var(--primary-color);
+    color: var(--text-color);
     border: none;
     border-radius: 8px;
     font-size: 17px;
@@ -98,11 +115,16 @@ button {
 }
 
 button:hover {
-    background: #16a34a;
+    background: var(--button-hover-color);
+}
+
+button:focus {
+    outline: none;
+    box-shadow: 0 0 5px var(--primary-color);
 }
 
 .error {
-    color: red;
+    color: var(--error-color);
     margin-top: 5px;
 }
 
@@ -112,7 +134,7 @@ button:hover {
 }
 
 .bottom-text span {
-    color: #22c55e;
+    color: var(--primary-color);
     font-weight: 600;
     cursor: pointer;
 }
