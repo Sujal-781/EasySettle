@@ -4,40 +4,46 @@ import api from '../api/axios';
 import './Login.css';
 
 export default function Login() {
-    const [email, setEmail] = useState('');
-    const [password, setPassword] = useState('');
-    const [emailError, setEmailError] = useState('');
-    const [passwordError, setPasswordError] = useState('');
+    const [formData, setFormData] = useState({ email: '', password: '' });
+    const [formErrors, setFormErrors] = useState({ emailError: '', passwordError: '' });
+    const [loading, setLoading] = useState(false);
     const navigate = useNavigate();
 
     const validateEmail = () => {
-        if (!email) { setEmailError('Email is required'); return false; }
-        if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) { setEmailError('Enter a valid email'); return false; }
-        setEmailError(''); return true;
+        if (!formData.email) { setFormErrors(prev => ({ ...prev, emailError: 'Email is required' })); return false; }
+        if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(formData.email)) { setFormErrors(prev => ({ ...prev, emailError: 'Enter a valid email' })); return false; }
+        setFormErrors(prev => ({ ...prev, emailError: '' })); return true;
     };
 
     const validatePassword = () => {
-        if (!password) { setPasswordError('Password is required'); return false; }
-        if (password.length < 6) { setPasswordError('Password must be at least 6 characters'); return false; }
-        setPasswordError(''); return true;
+        if (!formData.password) { setFormErrors(prev => ({ ...prev, passwordError: 'Password is required' })); return false; }
+        if (formData.password.length < 6) { setFormErrors(prev => ({ ...prev, passwordError: 'Password must be at least 6 characters' })); return false; }
+        setFormErrors(prev => ({ ...prev, passwordError: '' })); return true;
     };
 
     async function handleSubmit(e) {
         e.preventDefault();
         if (!validateEmail() || !validatePassword()) return;
+        setLoading(true);
         try {
-            const response = await api.post('/users/login', { email, password });
-            localStorage.setItem('userId', response.data.id);
-            localStorage.setItem('userName', response.data.name);
+            const response = await api.post('/users/login', { email: formData.email, password: formData.password });
+            document.cookie = `authToken=${response.data.token}; HttpOnly; Secure; SameSite=Strict`;
             navigate('/dashboard');
         } catch (err) {
             if (err.response?.status === 401) {
-                setPasswordError('Incorrect email or password');
+                setFormErrors(prev => ({ ...prev, passwordError: 'Incorrect email or password' }));
             } else {
-                setEmailError('Something went wrong. Try again.');
+                setFormErrors(prev => ({ ...prev, emailError: 'Something went wrong. Try again.' }));
             }
+        } finally {
+            setLoading(false);
         }
     }
+
+    const handleChange = (e) => {
+        const { name, value } = e.target;
+        setFormData(prev => ({ ...prev, [name]: value }));
+    };
 
     return (
         <div className="container">
@@ -65,23 +71,25 @@ export default function Login() {
                         <small>Email</small>
                         <input
                             type="email"
+                            name="email"
                             placeholder="you@example.com"
-                            value={email}
-                            onChange={e => setEmail(e.target.value)}
+                            value={formData.email}
+                            onChange={handleChange}
                         />
-                        <small className="error">{emailError}</small>
+                        <small className="error">{formErrors.emailError}</small>
                     </div>
                     <div className="form-group">
                         <small>Password</small>
                         <input
                             type="password"
+                            name="password"
                             placeholder="Enter your password"
-                            value={password}
-                            onChange={e => setPassword(e.target.value)}
+                            value={formData.password}
+                            onChange={handleChange}
                         />
-                        <small className="error">{passwordError}</small>
+                        <small className="error">{formErrors.passwordError}</small>
                     </div>
-                    <button type="submit">Sign In</button>
+                    <button type="submit" disabled={loading}>{loading ? 'Signing In...' : 'Sign In'}</button>
                 </form>
 
                 <div className="bottom-text">
