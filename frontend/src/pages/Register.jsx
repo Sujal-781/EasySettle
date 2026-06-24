@@ -4,43 +4,68 @@ import api from '../api/axios';
 import './Login.css';
 
 export default function Register() {
-    const [name, setName] = useState('');
-    const [email, setEmail] = useState('');
-    const [password, setPassword] = useState('');
-    const [nameError, setNameError] = useState('');
-    const [emailError, setEmailError] = useState('');
-    const [passwordError, setPasswordError] = useState('');
+    const [formData, setFormData] = useState({
+        name: '',
+        email: '',
+        password: ''
+    });
+    const [formErrors, setFormErrors] = useState({
+        name: '',
+        email: '',
+        password: ''
+    });
     const navigate = useNavigate();
 
-    const validateName = () => {
-        if (!name) { setNameError('Name is required'); return false; }
-        setNameError(''); return true;
-    };
+    const validateForm = () => {
+        let isValid = true;
+        const errors = { name: '', email: '', password: '' };
 
-    const validateEmail = () => {
-        if (!email) { setEmailError('Email is required'); return false; }
-        if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) { setEmailError('Enter a valid email'); return false; }
-        setEmailError(''); return true;
-    };
+        if (!formData.name) {
+            errors.name = 'Name is required';
+            isValid = false;
+        }
 
-    const validatePassword = () => {
-        if (!password) { setPasswordError('Password is required'); return false; }
-        if (password.length < 6) { setPasswordError('Password must be at least 6 characters'); return false; }
-        setPasswordError(''); return true;
+        if (!formData.email) {
+            errors.email = 'Email is required';
+            isValid = false;
+        } else if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(formData.email)) {
+            errors.email = 'Enter a valid email';
+            isValid = false;
+        }
+
+        if (!formData.password) {
+            errors.password = 'Password is required';
+            isValid = false;
+        } else if (formData.password.length < 6) {
+            errors.password = 'Password must be at least 6 characters';
+            isValid = false;
+        }
+
+        setFormErrors(errors);
+        return isValid;
     };
 
     const handleSubmit = async (e) => {
         e.preventDefault();
-        const nameValid = validateName();
-        const emailValid = validateEmail();
-        const passwordValid = validatePassword();
-        if (!nameValid || !emailValid || !passwordValid) return;
+        if (!validateForm()) return;
+
         try {
-            await api.post('/users/register', { name, email, password });
+            await api.post('/users/register', formData);
             navigate('/');
         } catch (err) {
-            setEmailError('Email already in use or registration failed');
+            setFormErrors(prevErrors => ({
+                ...prevErrors,
+                email: 'Email already in use or registration failed'
+            }));
         }
+    };
+
+    const handleChange = (e) => {
+        const { name, value } = e.target;
+        setFormData(prevData => ({
+            ...prevData,
+            [name]: value
+        }));
     };
 
     return (
@@ -69,31 +94,34 @@ export default function Register() {
                         <small>Full Name</small>
                         <input
                             type="text"
+                            name="name"
                             placeholder="John Doe"
-                            value={name}
-                            onChange={e => setName(e.target.value)}
+                            value={formData.name}
+                            onChange={handleChange}
                         />
-                        <small className="error">{nameError}</small>
+                        <small className="error">{formErrors.name}</small>
                     </div>
                     <div className="form-group">
                         <small>Email</small>
                         <input
                             type="email"
+                            name="email"
                             placeholder="you@example.com"
-                            value={email}
-                            onChange={e => setEmail(e.target.value)}
+                            value={formData.email}
+                            onChange={handleChange}
                         />
-                        <small className="error">{emailError}</small>
+                        <small className="error">{formErrors.email}</small>
                     </div>
                     <div className="form-group">
                         <small>Password</small>
                         <input
                             type="password"
+                            name="password"
                             placeholder="Min. 6 characters"
-                            value={password}
-                            onChange={e => setPassword(e.target.value)}
+                            value={formData.password}
+                            onChange={handleChange}
                         />
-                        <small className="error">{passwordError}</small>
+                        <small className="error">{formErrors.password}</small>
                     </div>
                     <button type="submit">Create Account</button>
                 </form>
