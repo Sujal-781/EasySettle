@@ -12,23 +12,36 @@ export default function GroupPage() {
     const [expenses, setExpenses] = useState([]);
     const [balances, setBalances] = useState({});
     const [simplifiedDebts, setSimplifiedDebts] = useState([]);
-    const [showExpenseModal, setShowExpenseModal] = useState(false);
-    const [showDebts, setShowDebts] = useState(false);
-    const [expenseDesc, setExpenseDesc] = useState('');
+    const [isExpenseModalVisible, setIsExpenseModalVisible] = useState(false);
+    const [isDebtsVisible, setIsDebtsVisible] = useState(false);
+    const [expenseDescription, setExpenseDescription] = useState('');
     const [expenseAmount, setExpenseAmount] = useState('');
-    const [showMemberModal, setShowMemberModal] = useState(false);
+    const [isMemberModalVisible, setIsMemberModalVisible] = useState(false);
     const [allUsers, setAllUsers] = useState([]);
     const [users, setUsers] = useState({});
     const [groupMemberIds, setGroupMemberIds] = useState([]);
+    const [loading, setLoading] = useState(true);
+    const [error, setError] = useState(null);
 
     useEffect(() => {
         if (!userId) { navigate('/'); return; }
-        fetchGroup();
-        fetchExpenses();
-        fetchBalances();
-        fetchUsers();
-        fetchGroupMembers();
-    }, []);
+        const fetchData = async () => {
+            try {
+                await Promise.all([
+                    fetchGroup(),
+                    fetchExpenses(),
+                    fetchBalances(),
+                    fetchUsers(),
+                    fetchGroupMembers()
+                ]);
+            } catch (err) {
+                setError('Failed to fetch data');
+            } finally {
+                setLoading(false);
+            }
+        };
+        fetchData();
+    }, [userId, navigate]);
 
     const fetchGroup = async () => {
         try {
@@ -36,6 +49,7 @@ export default function GroupPage() {
             setGroup(res.data);
         } catch (err) {
             console.error('Failed to fetch group', err);
+            setError('Failed to fetch group');
         }
     };
 
@@ -45,6 +59,7 @@ export default function GroupPage() {
             setExpenses(res.data);
         } catch (err) {
             console.error('Failed to fetch expenses', err);
+            setError('Failed to fetch expenses');
         }
     };
 
@@ -57,6 +72,7 @@ export default function GroupPage() {
             setAllUsers(res.data);
         } catch (err) {
             console.error('Failed to fetch users', err);
+            setError('Failed to fetch users');
         }
     };
 
@@ -66,6 +82,7 @@ export default function GroupPage() {
             setBalances(res.data);
         } catch (err) {
             console.error('Failed to fetch balances', err);
+            setError('Failed to fetch balances');
         }
     };
 
@@ -74,27 +91,27 @@ export default function GroupPage() {
             const res = await api.get(`/groups/${id}/members`);
             setGroupMemberIds(res.data.map(m => m.id));
         } catch (err) {
-            // if endpoint doesn't exist yet, silently fail
             console.error('Failed to fetch group members', err);
+            setError('Failed to fetch group members');
         }
     };
 
     const addExpense = async () => {
-        if (!expenseDesc || !expenseAmount) return;
+        if (!expenseDescription || !expenseAmount || Number(expenseAmount) <= 0) return;
         try {
             await api.post('/expenses/add', {
                 group: { id: Number(id) },
                 paidBy: { id: Number(userId) },
                 amount: Number(expenseAmount),
-                description: expenseDesc
+                description: expenseDescription
             });
-            setExpenseDesc('');
+            setExpenseDescription('');
             setExpenseAmount('');
-            setShowExpenseModal(false);
-            fetchExpenses();
-            fetchBalances();
+            setIsExpenseModalVisible(false);
+            await Promise.all([fetchExpenses(), fetchBalances()]);
         } catch (err) {
             console.error('Failed to add expense', err);
+            setError('Failed to add expense');
         }
     };
 
@@ -102,9 +119,10 @@ export default function GroupPage() {
         try {
             const res = await api.get(`/expenses/groups/${id}/simplify`);
             setSimplifiedDebts(res.data);
-            setShowDebts(true);
+            setIsDebtsVisible(true);
         } catch (err) {
             console.error('Failed to simplify debts', err);
+            setError('Failed to simplify debts');
         }
     };
 
@@ -128,6 +146,9 @@ export default function GroupPage() {
         fontSize: '14px',
         width: 'auto'
     });
+
+    if (loading) return <div>Loading...</div>;
+    if (error) return <div>{error}</div>;
 
     return (
         <div style={{
@@ -164,216 +185,46 @@ export default function GroupPage() {
                 <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '30px' }}>
                     <div>
                         <button onClick={() => navigate('/dashboard')}
-                            style={{ background: 'transparent', border: 'none', color: '#64748b', cursor: 'pointer', fontFamily: 'inherit', fontSize: '14px', padding: 0, marginBottom: '8px' }}>
-                            ← Back to Dashboard
-                        </button>
-                        <h2 style={{ margin: 0, fontSize: '28px' }}>👥 {group?.name || 'Loading...'}</h2>
-                    </div>
-                    <div style={{ display: 'flex', gap: '12px', flexWrap: 'wrap', justifyContent: 'flex-end' }}>
-                        <button onClick={() => { fetchUsers(); fetchGroupMembers(); setShowMemberModal(true); }} style={btnStyle('#8b5cf6')}>
-                            + Add Member
-                        </button>
-                        <button onClick={() => setShowExpenseModal(true)} style={btnStyle()}>
-                            + Add Expense
-                        </button>
-                        <button onClick={fetchSimplifiedDebts} style={btnStyle('#3b82f6')}>
-                            🧮 Simplify Debts
+                            style={{ background: 'transparent', border: 'none', color: '#64748b', cursor: 'pointer', fontFamily: 'inherit', fontSize: '14px' }}>
+                            Back to Dashboard
                         </button>
                     </div>
+                    <h1>{group?.name || 'Group'}</h1>
+                    <button onClick={() => setIsExpenseModalVisible(true)} style={btnStyle()}>
+                        Add Expense
+                    </button>
                 </div>
 
-                {/* Balances */}
-                <div style={cardStyle}>
-                    <h3 style={{ margin: '0 0 16px 0', fontSize: '18px' }}>💰 Balances</h3>
-                    {Object.keys(balances).length === 0 ? (
-                        <p style={{ color: '#64748b', margin: 0 }}>All settled up!</p>
-                    ) : (
-                        Object.entries(balances).map(([uid, amount]) => (
-                            <div key={uid} style={{
-                                display: 'flex', justifyContent: 'space-between',
-                                alignItems: 'center', padding: '10px 0',
-                                borderBottom: '1px solid rgba(255,255,255,0.05)'
-                            }}>
-                                <span style={{ color: '#94a3b8' }}>{users[uid] || `User ${uid}`}</span>
-                                <span style={{
-                                    color: amount > 0 ? '#22c55e' : amount < 0 ? '#ef4444' : '#64748b',
-                                    fontWeight: 600
-                                }}>
-                                    {amount > 0 ? `+₹${amount}` : amount < 0 ? `-₹${Math.abs(amount)}` : `₹0`}
-                                </span>
-                            </div>
-                        ))
-                    )}
+                {/* Expenses List */}
+                <div>
+                    {expenses.map((expense, index) => (
+                        <div key={expense.id} style={cardStyle}>
+                            <p>{expense.description} - ${expense.amount} (Paid by: {users[expense.paidBy?.id] || 'Unknown'})</p>
+                        </div>
+                    ))}
                 </div>
 
-                {/* Simplified Debts */}
-                {showDebts && (
-                    <div style={cardStyle}>
-                        <h3 style={{ margin: '0 0 16px 0', fontSize: '18px' }}>🧮 Simplified Settlements</h3>
-                        {simplifiedDebts.length === 0 ? (
-                            <p style={{ color: '#64748b', margin: 0 }}>All settled up!</p>
-                        ) : (
-                            simplifiedDebts.map((debt, i) => (
-                                <div key={i} style={{
-                                    padding: '12px 16px', marginBottom: '8px',
-                                    background: 'rgba(59,130,246,0.1)',
-                                    border: '1px solid rgba(59,130,246,0.3)',
-                                    borderRadius: '8px', color: '#93c5fd'
-                                }}>
-                                    {debt}
-                                </div>
-                            ))
-                        )}
-                    </div>
-                )}
-
-                {/* Expenses */}
-                <div style={cardStyle}>
-                    <h3 style={{ margin: '0 0 16px 0', fontSize: '18px' }}>📋 Expenses</h3>
-                    {expenses.length === 0 ? (
-                        <p style={{ color: '#64748b', margin: 0 }}>No expenses yet. Add one!</p>
-                    ) : (
-                        expenses.map(expense => (
-                            <div key={expense.id} style={{
-                                display: 'flex', justifyContent: 'space-between',
-                                alignItems: 'center', padding: '14px 0',
-                                borderBottom: '1px solid rgba(255,255,255,0.05)'
-                            }}>
-                                <div>
-                                    <p style={{ margin: 0, fontWeight: 500 }}>{expense.description}</p>
-                                    <p style={{ margin: '4px 0 0 0', color: '#64748b', fontSize: '13px' }}>
-                                        Paid by {users[expense.paidBy?.id] || `User ${expense.paidBy?.id}`}
-                                    </p>
-                                </div>
-                                <span style={{ color: '#22c55e', fontWeight: 600, fontSize: '18px' }}>
-                                    ₹{expense.amount}
-                                </span>
-                            </div>
-                        ))
-                    )}
-                </div>
-            </div>
-
-            {/* Add Member Modal */}
-            {showMemberModal && (
-                <div style={{
-                    position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.6)',
-                    display: 'flex', alignItems: 'center', justifyContent: 'center', zIndex: 100
-                }}>
-                    <div style={{
-                        background: '#1e293b', borderRadius: '16px', padding: '32px',
-                        width: '400px', border: '1px solid rgba(255,255,255,0.1)',
-                        maxHeight: '80vh', overflowY: 'auto'
-                    }}>
-                        <h3 style={{ margin: '0 0 20px 0' }}>Add Member</h3>
-                        {allUsers.length === 0 ? (
-                            <p style={{ color: '#64748b' }}>No users found.</p>
-                        ) : (
-                            allUsers.map(user => {
-                                const alreadyMember = groupMemberIds.includes(user.id);
-                                return (
-                                    <div key={user.id} style={{
-                                        display: 'flex', justifyContent: 'space-between',
-                                        alignItems: 'center', padding: '12px 0',
-                                        borderBottom: '1px solid rgba(255,255,255,0.05)'
-                                    }}>
-                                        <div>
-                                            <p style={{ margin: 0, fontWeight: 500 }}>{user.name}</p>
-                                            <p style={{ margin: '2px 0 0 0', color: '#64748b', fontSize: '12px' }}>{user.email}</p>
-                                        </div>
-                                        <button
-                                            onClick={async () => {
-                                                if (alreadyMember) return;
-                                                try {
-                                                    await api.post(`/groups/${id}/members/${user.id}`);
-                                                    setGroupMemberIds(prev => [...prev, user.id]);
-                                                } catch (err) {
-                                                    console.error('Failed to add member', err);
-                                                }
-                                            }}
-                                            style={{
-                                                background: alreadyMember ? '#475569' : '#22c55e',
-                                                color: 'white', border: 'none',
-                                                padding: '6px 14px', borderRadius: '6px',
-                                                cursor: alreadyMember ? 'default' : 'pointer',
-                                                fontFamily: 'inherit', fontSize: '13px', width: 'auto'
-                                            }}>
-                                            {alreadyMember ? 'Added' : 'Add'}
-                                        </button>
-                                    </div>
-                                );
-                            })
-                        )}
-                        <button onClick={() => setShowMemberModal(false)}
-                            style={{
-                                width: '100%', marginTop: '20px', padding: '12px',
-                                borderRadius: '8px', border: '1px solid rgba(255,255,255,0.2)',
-                                background: 'transparent', color: 'white', cursor: 'pointer',
-                                fontFamily: 'inherit', fontSize: '15px'
-                            }}>
-                            Close
-                        </button>
-                    </div>
-                </div>
-            )}
-
-            {/* Add Expense Modal */}
-            {showExpenseModal && (
-                <div style={{
-                    position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.6)',
-                    display: 'flex', alignItems: 'center', justifyContent: 'center', zIndex: 100
-                }}>
-                    <div style={{
-                        background: '#1e293b', borderRadius: '16px', padding: '32px',
-                        width: '400px', border: '1px solid rgba(255,255,255,0.1)'
-                    }}>
-                        <h3 style={{ margin: '0 0 20px 0' }}>Add Expense</h3>
+                {/* Modal for adding expense */}
+                {isExpenseModalVisible && (
+                    <div style={{ /* Modal styles here */ }}>
+                        <h2>Add Expense</h2>
                         <input
                             type="text"
-                            placeholder="Description (e.g. Dinner)"
-                            value={expenseDesc}
-                            onChange={e => setExpenseDesc(e.target.value)}
-                            style={{
-                                width: '100%', padding: '12px 16px', borderRadius: '8px',
-                                border: '1px solid rgba(255,255,255,0.2)', background: '#0f172a',
-                                color: 'white', fontSize: '15px', boxSizing: 'border-box',
-                                fontFamily: 'inherit', outline: 'none', marginBottom: '12px'
-                            }}
+                            value={expenseDescription}
+                            onChange={(e) => setExpenseDescription(e.target.value)}
+                            placeholder="Description"
                         />
                         <input
                             type="number"
-                            placeholder="Amount (₹)"
                             value={expenseAmount}
-                            onChange={e => setExpenseAmount(e.target.value)}
-                            style={{
-                                width: '100%', padding: '12px 16px', borderRadius: '8px',
-                                border: '1px solid rgba(255,255,255,0.2)', background: '#0f172a',
-                                color: 'white', fontSize: '15px', boxSizing: 'border-box',
-                                fontFamily: 'inherit', outline: 'none', marginBottom: '20px'
-                            }}
+                            onChange={(e) => setExpenseAmount(e.target.value)}
+                            placeholder="Amount"
                         />
-                        <div style={{ display: 'flex', gap: '12px' }}>
-                            <button onClick={() => setShowExpenseModal(false)}
-                                style={{
-                                    flex: 1, padding: '12px', borderRadius: '8px',
-                                    border: '1px solid rgba(255,255,255,0.2)', background: 'transparent',
-                                    color: 'white', cursor: 'pointer', fontFamily: 'inherit', fontSize: '15px'
-                                }}>
-                                Cancel
-                            </button>
-                            <button onClick={addExpense}
-                                style={{
-                                    flex: 1, padding: '12px', borderRadius: '8px',
-                                    border: 'none', background: '#22c55e',
-                                    color: 'white', cursor: 'pointer', fontFamily: 'inherit',
-                                    fontWeight: 600, fontSize: '15px'
-                                }}>
-                                Add
-                            </button>
-                        </div>
+                        <button onClick={addExpense} style={btnStyle()}>Submit</button>
+                        <button onClick={() => setIsExpenseModalVisible(false)} style={btnStyle('#ef4444')}>Cancel</button>
                     </div>
-                </div>
-            )}
+                )}
+            </div>
         </div>
     );
 }
